@@ -1,0 +1,174 @@
+<html>
+<body>
+
+<div id="divUi">
+
+	<h3>Text Tabifier/Detabifier</h3>
+
+	<p>
+		Enter or load some text and specify a tab size
+		in spaces, then click the buttons
+		to convert spaces to tabs or tabs to spaces
+		while preserving the desired horizontal alignment.
+	</p>
+
+	<label>Text:</label>
+	<input id="inputFile" type="file" onchange="UiEventHandler.inputFile_Changed(this);"></input>
+	<label>Spaces per Tab:</label>
+	<input id="inputSpacesPerTab" type="number" min="1" max="16" step="1" value="8"></input>
+	<button onclick="UiEventHandler.buttonTabify_Clicked();">Tabify</button>
+	<button onclick="UiEventHandler.buttonDetabify_Clicked();">Detabify</button>
+	<button onclick="UiEventHandler.buttonSave_Clicked();">Save</button>
+	<br />
+
+	<textarea id="textareaText" cols="80" rows="25"></textarea>
+</div>
+
+<script type="text/javascript">
+
+class UiEventHandler
+{
+	static inputFile_Changed(inputFile)
+	{
+		var fileToLoad = inputFile.files[0];
+
+		if (fileToLoad != null)
+		{
+			var fileReader = new FileReader();
+			fileReader.onload = (event) =>
+			{
+				var textLoaded = event.target.result;
+				var d = document;
+				var textareaText = d.getElementById("textareaText");
+				textareaText.value = textLoaded;
+			}
+			fileReader.readAsText(fileToLoad);
+		}
+	}
+
+	static buttonDetabify_Clicked()
+	{
+		var d = document;
+
+		var textareaText = d.getElementById("textareaText");
+		var textToDetabify = textareaText.value;
+
+		var inputSpacesPerTab = d.getElementById("inputSpacesPerTab");
+		var spacesPerTabAsString = inputSpacesPerTab.value;
+		var spacesPerTab = parseInt(spacesPerTabAsString);
+		var tabAsSpaces = "".padStart(spacesPerTab, " ");
+
+		var newline = "\n";
+		var linesToDetabify = textToDetabify.split(newline);
+		var linesDetabified = [];
+
+		var tab = "\t";
+		var space = " ";
+
+		for (var i = 0; i < linesToDetabify.length; i++)
+		{
+			var lineToDetabify = linesToDetabify[i];
+
+			var charsToDetabify = lineToDetabify.split("");
+			var charsDetabified = [];
+
+			var spacesSinceStartOfLineSoFar = 0;
+
+			for (var c = 0; c < charsToDetabify.length; c++)
+			{
+				var charToDetabify = charsToDetabify[c];
+
+				if (charToDetabify == tab)
+				{
+					if (spacesSinceStartOfLineSoFar % spacesPerTab == 0)
+					{
+						charsDetabified.push(tabAsSpaces);
+						spacesSinceStartOfLineSoFar += spacesPerTab;
+					}
+					else
+					{
+						while (spacesSinceStartOfLineSoFar % spacesPerTab != 0)
+						{
+							charsDetabified.push(space);
+							spacesSinceStartOfLineSoFar++;
+						}
+					}
+				}
+				else
+				{
+					var charDetabified = charToDetabify;
+					spacesSinceStartOfLineSoFar++;
+					charsDetabified.push(charDetabified);
+				}
+			}
+
+			var lineDetabified = charsDetabified.join("");
+			linesDetabified.push(lineDetabified);
+		}
+
+		var textDetabified = linesDetabified.join(newline);
+		textareaText.value = textDetabified;
+	}
+
+	static buttonSave_Clicked()
+	{
+		var d = document;
+
+		var textareaText = d.getElementById("textareaText");
+		var textToSave = textareaText.value;
+
+		var textToSaveAsBlob = new Blob([textToSave], { type:"text/plain" });
+		var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+		var fileNameToSaveAs = "Output.txt";
+
+		var link = d.createElement("a");
+		link.download = fileNameToSaveAs;
+		link.href = textToSaveAsURL;
+		link.click();
+	}
+
+	static buttonTabify_Clicked()
+	{
+		var d = document;
+
+		var textareaText = d.getElementById("textareaText");
+		var textToTabify = textareaText.value;
+
+		var inputSpacesPerTab = d.getElementById("inputSpacesPerTab");
+		var spacesPerTabAsString = inputSpacesPerTab.value;
+		var spacesPerTab = parseInt(spacesPerTabAsString);
+		var tabAsSpaces = "".padStart(spacesPerTab, " ");
+
+		var newline = "\n";
+		var linesToTabify = textToTabify.split(newline);
+		var linesTabified = [];
+
+		var tab = "\t";
+		var space = " ";
+		var twoTabs = tab + tab;
+
+		for (var i = 0; i < linesToTabify.length; i++)
+		{
+			var lineToTabify = linesToTabify[i];
+
+			var lineTabified = lineToTabify.split(tabAsSpaces).join(tab);
+
+			for (var s = spacesPerTab - 1; s >= 1; s--)
+			{
+				var spaces = "".padStart(s, " ");
+				var tabThenSpaces = tab + spaces;
+				lineTabified = lineTabified.split(tabThenSpaces).join(twoTabs);
+			}
+
+			linesTabified.push(lineTabified);
+		}
+
+		var textTabified = linesTabified.join(newline);
+		textareaText.value = textTabified;
+	}
+}
+
+</script>
+
+</body>
+</html>
